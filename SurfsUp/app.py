@@ -37,7 +37,15 @@ app = Flask(__name__)
 def welcome():
     # Return all available API routes 
     return(
-        f"<br/>"
+        f"Available routes:<br/>"
+        f"Homepage: '/' <br/>"
+        f"Precipitation data: '/api/v1.0/precipitation' <br/>"
+        f"Station data: '/api/v1.0/stations' <br/>"
+        f"Temperature observations: '/api/v1.0/tobs' <br/>"
+        f"Minimum, maximum, and average temperatures from start date: '/api/v1.0/<start>' <br/>"
+        f"Enter desired start date in 'YYYY-MM-DD' format inside <start> without the carrots (<>) <br/>"
+        f"Minimum, maximum, and average temperatures between the specified start and end dates: '/api/v1.0/<start>/<end>' <br/>"
+        f"Enter desired dates in 'YYYY-MM-DD' format inside <start>/<end> without the carrots (<>) <br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -63,14 +71,14 @@ def tobos():
 
 @app.route("/api/v1.0/<start>")
 def start():
-    # Calculate TMIN, TAVG, TMAX for all dates >= <start>
+    # Calculate TMIN, TMAX, TAVG for all dates >= <start>
     return(
         f"<br/>"
     )
 
 @app.route("/api/v1.0/<start>/<end>")
 def start_end():
-    # Calculate TMAG, TAVG, TMAX for all dates >= <start> and <= <end>
+    # Calculate TMAG, TMAX, TAVG for all dates >= <start> and <= <end>
     return(
         f"<br/>"
     )
