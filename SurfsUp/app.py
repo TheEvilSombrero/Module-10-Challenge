@@ -22,9 +22,6 @@ Base.prepare(autoload_with=engine)
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 
-# Create our session (link) from Python to the DB
-session = Session(engine)
-
 #################################################
 # Flask Setup
 #################################################
@@ -51,6 +48,8 @@ def welcome():
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Return JSON representation of the dictionary
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
     
     # Pull most recent date - hard coded because the dataset is not changing 
     most_recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first().date
@@ -63,11 +62,21 @@ def precipitation():
     rain_results = session.query(Measurement.date, func.avg(Measurement.prcp)).\
                         filter(Measurement.date >= one_year_ago).all()
     
+    # Close session
+    session.close()
+    
     return(jsonify(rain_results))
 
 @app.route("/api/v1.0/stations")
 def stations():
     # Return JSON list of stations from the dataset
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    
+    
+    # Close session
+    session.close()
+    
     return(
         jsonify()
     )
@@ -75,6 +84,12 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def tobos():
     # Return JSON list of temperature observations for the previous years
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    
+    # Close session
+    session.close()
+    
     return(
         jsonify()
     )
@@ -82,6 +97,12 @@ def tobos():
 @app.route("/api/v1.0/<start>")
 def start():
     # Calculate TMIN, TMAX, TAVG for all dates >= <start>
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    
+    # Close session
+    session.close()
+    
     return(
         f"<br/>"
     )
@@ -89,6 +110,12 @@ def start():
 @app.route("/api/v1.0/<start>/<end>")
 def start_end():
     # Calculate TMAG, TMAX, TAVG for all dates >= <start> and <= <end>
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    
+    # Close session
+    session.close()
+    
     return(
         f"<br/>"
     )
