@@ -51,9 +51,19 @@ def welcome():
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Return JSON representation of the dictionary
-    return(
-        jsonify()
-    )
+    
+    # Pull most recent date - hard coded because the dataset is not changing 
+    most_recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first().date
+    most_recent_date = dt.date(2017, 8, 23)
+    
+    # Calculate one year ago from the most recent date 
+    one_year_ago = most_recent_date - dt.timedelta(days=365)
+    
+    # Pull relevant data from the specified timeframe 
+    rain_results = session.query(Measurement.date, func.avg(Measurement.prcp)).\
+                        filter(Measurement.date >= one_year_ago).all()
+    
+    return(jsonify(rain_results))
 
 @app.route("/api/v1.0/stations")
 def stations():
