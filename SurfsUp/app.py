@@ -1,5 +1,6 @@
 # Import the dependencies.
 import numpy as np
+import datetime as dt
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -69,6 +70,8 @@ def precipitation():
     session.close()
     
     return(jsonify(rain_results_list))
+# Cannot JSONIFY this
+# TypeError: Object of type Row is not JSON serializable
 
 @app.route("/api/v1.0/stations")
 def stations():
@@ -109,6 +112,8 @@ def tobos():
     session.close()
     
     return(jsonify(most_active_station_temp))
+# Cannot JSONIFY this
+# TypeError: Object of type Row is not JSON serializable
 
 @app.route("/api/v1.0/<start>")
 def start(start):
