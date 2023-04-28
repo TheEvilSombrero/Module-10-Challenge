@@ -34,7 +34,7 @@ app = Flask(__name__)
 def welcome():
     # Return all available API routes 
     return(
-        f"Available routes:<br/>"
+        f"Available routes: <br/>"
         f"Homepage: '/' <br/>"
         f"Precipitation data: '/api/v1.0/precipitation' <br/>"
         f"Station data: '/api/v1.0/stations' <br/>"
@@ -62,10 +62,13 @@ def precipitation():
     rain_results = session.query(Measurement.date, func.avg(Measurement.prcp)).\
                         filter(Measurement.date >= one_year_ago).all()
     
+    # Put results into list for JSONIFY 
+    rain_results_list = list(rain_results)
+    
     # Close session
     session.close()
     
-    return(jsonify(rain_results))
+    return(jsonify(rain_results_list))
 
 @app.route("/api/v1.0/stations")
 def stations():
@@ -73,13 +76,14 @@ def stations():
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
+    # Query all of the stations and turn it into a list
+    results = session.query(Station.station).all()
+    stations_list = list(np.ravel(results))
     
     # Close session
     session.close()
     
-    return(
-        jsonify()
-    )
+    return(jsonify(stations_list))
 
 @app.route("/api/v1.0/tobs")
 def tobos():
@@ -87,18 +91,33 @@ def tobos():
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
+    # Get date one year before most recent data point 
+    most_recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first().date
+    most_recent_date = dt.date(2017, 8, 23)
+    one_year_ago = most_recent_date - dt.timedelta(days=365)
+    
+    # Get most active station 
+    most_active_stations = session.query(Measurement.station, func.count(Measurement.station)).\
+                                    group_by(Measurement.station).\
+                                    order_by(func.count(Measurement.station).desc()).all()
+    
+    most_active_station = most_active_stations[0][0]
+    most_active_station_temp = session.query(func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).\
+                                filter(Measurement.station == most_active_station).all()
+    
     # Close session
     session.close()
     
-    return(
-        jsonify()
-    )
+    return(jsonify(most_active_station_temp))
 
 @app.route("/api/v1.0/<start>")
-def start():
+def start(start):
     # Calculate TMIN, TMAX, TAVG for all dates >= <start>
     # Create our session (link) from Python to the DB
     session = Session(engine)
+    
+    # Turn start time into DT format
+    #cannonicalized = start.replace("-", ")
     
     # Close session
     session.close()
@@ -108,7 +127,7 @@ def start():
     )
 
 @app.route("/api/v1.0/<start>/<end>")
-def start_end():
+def start_end(start, end):
     # Calculate TMAG, TMAX, TAVG for all dates >= <start> and <= <end>
     # Create our session (link) from Python to the DB
     session = Session(engine)
@@ -119,3 +138,6 @@ def start_end():
     return(
         f"<br/>"
     )
+
+if __name__ == '__main__':
+    app.run(debug=True)
