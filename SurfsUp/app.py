@@ -41,9 +41,9 @@ def welcome():
         f"Station data: '/api/v1.0/stations' <br/>"
         f"Temperature observations: '/api/v1.0/tobs' <br/>"
         f"Minimum, maximum, and average temperatures from start date: '/api/v1.0/start' <br/>"
-        f"Enter desired start date in 'YYYY-MM-DD' format inside start without the carrots (<>) <br/>"
+        f"Enter desired start date in 'YYYY-MM-DD' format inside `start`. <br/>"
         f"Minimum, maximum, and average temperatures between the specified start and end dates: '/api/v1.0/start/end' <br/>"
-        f"Enter desired dates in 'YYYY-MM-DD' format inside <start>/<end> without the carrots (<>) <br/>"
+        f"Enter desired dates in 'YYYY-MM-DD' format inside `start`/`end`. <br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -136,10 +136,17 @@ def start(start):
     # Format query 
     temp_list = list(np.ravel(temp_query))
     
+    temp_results_dict = {}
+    i = 0
+    headers = ["Minimum Temperature", "Max temp", "Avg temp"]
+    for t in temp_list:
+        temp_results_dict[headers[i]] = t
+        i += 1
+    
     # Close session
     session.close()
     
-    return(jsonify(temp_list))
+    return(jsonify(temp_results_dict))
 
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start, end):
@@ -159,10 +166,17 @@ def start_end(start, end):
     # Format query 
     temp_list = list(np.ravel(temp_query))
     
+    temp_results_dict = {}
+    i = 0
+    headers = ["Minimum Temperature", "Max temp", "Avg temp"]
+    for t in temp_list:
+        temp_results_dict[headers[i]] = t
+        i += 1
+    
     # Close session
     session.close()
     
-    return(jsonify(temp_list))
+    return(jsonify(temp_results_dict))
 
 if __name__ == '__main__':
     app.run(debug=True)
