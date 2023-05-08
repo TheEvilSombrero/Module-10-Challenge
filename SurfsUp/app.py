@@ -40,9 +40,9 @@ def welcome():
         f"Precipitation data: '/api/v1.0/precipitation' <br/>"
         f"Station data: '/api/v1.0/stations' <br/>"
         f"Temperature observations: '/api/v1.0/tobs' <br/>"
-        f"Minimum, maximum, and average temperatures from start date: '/api/v1.0/<start>' <br/>"
-        f"Enter desired start date in 'YYYY-MM-DD' format inside <start> without the carrots (<>) <br/>"
-        f"Minimum, maximum, and average temperatures between the specified start and end dates: '/api/v1.0/<start>/<end>' <br/>"
+        f"Minimum, maximum, and average temperatures from start date: '/api/v1.0/start' <br/>"
+        f"Enter desired start date in 'YYYY-MM-DD' format inside start without the carrots (<>) <br/>"
+        f"Minimum, maximum, and average temperatures between the specified start and end dates: '/api/v1.0/start/end' <br/>"
         f"Enter desired dates in 'YYYY-MM-DD' format inside <start>/<end> without the carrots (<>) <br/>"
     )
 
@@ -60,16 +60,20 @@ def precipitation():
     one_year_ago = most_recent_date - dt.timedelta(days=365)
     
     # Pull relevant data from the specified timeframe 
-    rain_results = session.query(Measurement.date, func.avg(Measurement.prcp)).\
+    rain_results = session.query(Measurement.date, Measurement.prcp).\
                         filter(Measurement.date >= one_year_ago).all()
     
     # Put results into list for JSONIFY 
-    rain_results_list = list(rain_results)
+    
+    # Put into dictionary for display 
+    rain_results_dict = {}
+    for r in rain_results:
+        rain_results_dict[r[0]] = r[1]
     
     # Close session
     session.close()
     
-    return(jsonify(rain_results_list))
+    return(jsonify(rain_results_dict))
 # Cannot JSONIFY this
 # TypeError: Object of type Row is not JSON serializable
 
@@ -105,15 +109,16 @@ def tobos():
                                     order_by(func.count(Measurement.station).desc()).all()
     
     most_active_station = most_active_stations[0][0]
-    most_active_station_temp = session.query(func.min(Measurement.tobs),func.max(Measurement.tobs),func.avg(Measurement.tobs)).\
+    most_active_station_temp = session.query(Measurement.tobs).\
+                                filter(Measurement.date >= one_year_ago).\
                                 filter(Measurement.station == most_active_station).all()
+    
+    most_active_station_list = list(np.ravel(most_active_station_temp))
     
     # Close session
     session.close()
     
-    return(jsonify(most_active_station_temp))
-# Cannot JSONIFY this
-# TypeError: Object of type Row is not JSON serializable
+    return(jsonify(most_active_station_list))
 
 @app.route("/api/v1.0/<start>")
 def start(start):
@@ -121,15 +126,20 @@ def start(start):
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
-    # Turn start time into DT format
-    #cannonicalized = start.replace("-", ")
+    # Turn start time into DT format    
+    start_date = dt.datetime.strptime(start, "%Y%m%d")
+    
+    # Query min, max, avg for all dates >= start_date
+    temp_query = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
+                            filter(Measurement.date >= start_date).all()
+    
+    # Format query 
+    temp_list = list(np.ravel(temp_query))
     
     # Close session
     session.close()
     
-    return(
-        f"<br/>"
-    )
+    return(jsonify(temp_list))
 
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start, end):
@@ -137,12 +147,22 @@ def start_end(start, end):
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
+    # Turn start time into DT format    
+    start_date = dt.datetime.strptime(start, "%Y%m%d")
+    end_date = dt.datetime.strptime(end, "%Y%m%d")
+    
+    # Query min, max, avg for all dates >= start_date
+    temp_query = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
+                            filter(Measurement.date >= start_date).\
+                            filter(Measurement.date <= end_date).all()
+    
+    # Format query 
+    temp_list = list(np.ravel(temp_query))
+    
     # Close session
     session.close()
     
-    return(
-        f"<br/>"
-    )
+    return(jsonify(temp_list))
 
 if __name__ == '__main__':
     app.run(debug=True)
